@@ -1,7 +1,12 @@
 fmri_twins_prediction
 ==============================
 
-twin status prediction with fmri images.
+Hello. We are Roland and Sven and this is our MLOps project!
+
+# Project Description
+
+Aim of this project is to make predictions of wether certain persons are twins based on functiontional connectivity brain data. <br>
+The data is taken from OpenNeuro. Especially we are using the dataset ['Queensland Twin IMaging (QTIM)'](https://openneuro.org/datasets/ds004169/versions/1.0.7) in our project.
 
 Project Organization
 ------------
@@ -53,5 +58,5 @@ Project Organization
 
 
 --------
-
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+## :wave: Attribution
+Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience
