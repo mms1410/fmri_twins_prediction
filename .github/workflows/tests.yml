@@ -54,7 +54,7 @@ jobs:
         run: tox run -e docs-test
   tests:
     name: Tests
-    runs-on: ${{ "{{" }} matrix.os {{ "}}" }}
+    runs-on:  ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest ]
