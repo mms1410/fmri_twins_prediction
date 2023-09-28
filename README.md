@@ -5,10 +5,10 @@ Hello. We are Roland and Sven and this is our MLOps project!
 
 # Project Description
 
-Aim of this project is to make predictions of wether certain persons are twins based on functiontional connectivity brain data. <br>
-The data is taken from OpenNeuro. Especially we are using the dataset ['Queensland Twin IMaging (QTIM)'](https://openneuro.org/datasets/ds004169/versions/1.0.7) in our project.
+Aim of this project is to make predictions of wether certain persons are twins based on functiontional connectivity brain data.
+The data is taken from OpenNeuro, especially we are using the dataset ['Queensland Twin IMaging (QTIM)'](https://openneuro.org/datasets/ds004169/versions/1.0.7) in our project.
 
-Project Organization
+# Project Organization
 ------------
 
     ├── LICENSE
