@@ -1,0 +1,38 @@
+# See https://setuptools.readthedocs.io/en/latest/build_meta.html
+[project]
+name = "fmri_twins_prediction"
+description = "An MLops pipeline to predict twin status based on MRI data."
+version = "0.1.0"
+readme = "README.md"
+keywords = ["MRI", "fMRI"]
+authors = [{name = "Sven Maurice Morlock", email = "svenmauricemorlock@yahoo.com"}]
+requires-python = ">=3.8"
+dependencies = ["torch-geometric", "nilearn"]
+license = {text = "MIT"}
+classifiers = [
+	"License :: OSI Approved :: MIT License",
+	"Programming Language :: Python :: 2.7",
+	"Development Status :: 4 - Beta"]
+
+
+[project.urls]
+documentation = "https://github.com/mms1410/fmri_twins_prediction"
+repository = "https://github.com/mms1410/fmri_twins_prediction"
+
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta:__legacy__"
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310"]
+
+
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 100
+include_trailing_comma = true
+reverse_relative = true
