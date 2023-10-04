@@ -1,29 +1,47 @@
-"""saves the downloaded data under data / raw.
+"""
+saves the downloaded fmri data of twins under data/raw.
 
 installation of datalad:
 https://docs.datalad.org/en/latest/generated/man/datalad-clone.html
-e.g. to install in ubuntu:
+e.g. installation in ubuntu via:
 sudo apt-get install datalad
 
 """
+import logging
 import os
 import shutil
 
 import datalad.api as dl
 
-id = "ds004169"
 
-dataset_url = f"https://github.com/OpenNeuroDatasets/{id}.git"
+def download_dataset(
+    dataset_access_number: str = "ds004169",
+    destination_dir: str | None = None,
+):
+    """Download dataset from open neuro datasets.
 
-dataset = dl.clone(source=dataset_url)
-dl.get(dataset.path)
+    Args:
+        dataset_access_number: neuro number (str, optional)
+        destination_dir : path where the folders are stored (str | None, optional)
+    """
+    url_part1 = "https://github.com/OpenNeuroDatasets/"
+    url_part2 = f"{dataset_access_number}.git"
+    dataset_url = url_part1 + url_part2
 
-destination_dir = os.path.join("data", "raw", id)
+    dataset = dl.clone(source=dataset_url)
+    dl.get(dataset.path)
 
-if not os.path.exists(destination_dir):
-    os.makedirs(destination_dir)
+    if destination_dir is None:
+        destination_dir = os.path.join("data", "raw", dataset_access_number)
 
-# Move the folder to the destination
-shutil.move(id, destination_dir)
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
 
-# todo: logging
+    # Move the folder to the destination:
+    shutil.move(dataset_access_number, destination_dir)
+    logger = logging.getLogger(__name__)
+    logger.info(f"raw fmri data {dataset_access_number} downloaded and saved to {destination_dir}")
+
+
+if __name__ == "__main__":
+    download_dataset()
