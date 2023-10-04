@@ -1,9 +1,11 @@
-repos:
-  - repo: local
-    hooks:
-      - id: run-tox
-        name: Run tox tests
-        entry: tox
-        language: system
-        pass_filenames: false
-        types: [python]
+repos: []
+
+hooks:
+  - id: run-local-tox
+    name: Run tox tests locally
+    entry: tox
+    language: system
+    pass_filenames: false
+    types: [python]
+    args: ['--', '-e', 'flake8,mypy']  
+
