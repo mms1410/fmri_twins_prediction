@@ -7,8 +7,7 @@ from pathlib import Path
 
 import torch
 from nilearn.connectome import ConnectivityMeasure
-from nilearn.datasets import fetch_atlas_aal
-from nilearn.datasets import fetch_atlas_schaefer_2018
+from nilearn.datasets import fetch_atlas_aal, fetch_atlas_schaefer_2018
 from nilearn.maskers import NiftiLabelsMasker
 
 
@@ -44,18 +43,15 @@ def nilearn_warning(subject: str, warning, mritype: str, funcname: str):
         mritype: string of mri type (func or anat).
         funcname: string of nilearn function/method to treat.
     """
-
-    print("=" * 78)
-    print(
-        f"Error in {funcname} for subject {subject} on {mritype} data.",
-    )
-    print(warning)
-    print("=" * 78)
+    warning.warn("Warning occured in nilearn function")
 
 
 def bids_to_tensor(
-    bids_folder: str, destination_folder: str,
-    masker_func, masker_anat, corr_measure,
+    bids_folder: str,
+    destination_folder: str,
+    masker_func,
+    masker_anat,
+    corr_measure,
 ):
     """Read nii files from bids folder and write as torch tensor.
 
@@ -79,7 +75,8 @@ def bids_to_tensor(
                         if file.endswith("task-rest_bold.nii.gz"):
                             # Get the functional MRI data
                             func_img = os.path.join(
-                                session_dir, mri_type,
+                                session_dir,
+                                mri_type,
                                 f"{subject}_{session}_task-rest_bold.nii.gz",
                             )
                             # mask and extract
@@ -93,7 +90,7 @@ def bids_to_tensor(
                                     funcname="masker.fit_transform",
                                 )
                             try:
-                                correlation_matrix = corr_measure.fit_transform([roi_ts])[0]  # noqa: E501
+                                corr = corr_measure.fit_transform([roi_ts])[0]  # noqa: E501
                             except Warning as w:
                                 nilearn_warning(
                                     subject=subject,
@@ -101,20 +98,21 @@ def bids_to_tensor(
                                     mritype="func",
                                     funcname="corr_measure.fit_transform",
                                 )
-                            correlation_matrix = torch.from_numpy(
-                                correlation_matrix,
+                            corr = torch.from_numpy(
+                                corr,
                             )
                             save_file = os.path.join(
                                 destination_folder,
                                 f"{mri_type}_{subject}_{session}.pt",
                             )
-                            torch.save(correlation_matrix, str(save_file))
+                            torch.save(corr, str(save_file))
                 if mri_type == "anat":
                     for file in os.listdir(mri_dir):
                         if file.endswith("T1w_defacemask.nii.gz"):
                             # get anatomical MRI data
                             anat_img = os.path.join(
-                                session_dir, mri_type,
+                                session_dir,
+                                mri_type,
                                 f"{subject}_{session}_T1w_defacemask.nii.gz",
                             )  # noqa: E501
                             # mask and extract
@@ -128,7 +126,7 @@ def bids_to_tensor(
                                     funcname="masker.fit_transform",
                                 )
                             try:
-                                correlation_matrix = corr_measure.fit_transform([roi_ts])[0]  # noqa: E501
+                                corr = corr_measure.fit_transform([roi_ts])[0]
                             except Warning as w:
                                 nilearn_warning(
                                     subject=subject,
@@ -136,14 +134,14 @@ def bids_to_tensor(
                                     mritype="anat",
                                     funcname="corr_measure.fit_transform",
                                 )
-                            correlation_matrix = torch.from_numpy(
-                                correlation_matrix,
+                            corr = torch.from_numpy(
+                                corr,
                             )
                             save_file = os.path.join(
                                 destination_folder,
                                 f"{mri_type}_{subject}_{session}.pt",
                             )
-                            torch.save(correlation_matrix, str(save_file))
+                            torch.save(corr, str(save_file))
 
 
 if __name__ == "__main__":
