@@ -2,6 +2,7 @@
 
 import os
 import re
+from itertools import combinations as itcomb
 from pathlib import Path
 from typing import Union
 
@@ -87,9 +88,52 @@ class NoMatchFoundError(Exception):
         super().__init__(f"No match found for pattern: {pattern}")
 
 
+def get_positive_pairs(metadata_df: pd.DataFrame):
+    """Get list of positive (twins) pairs.
+
+    This function creates a list of tuples. Each tuple consists
+    of a subject_id and another subject_id with same family_id (e.g. twins).
+
+    Args:
+        metadata_df: pandas dataframe with col 'participant_id' and 'family_id'
+
+    Returns:
+        list of tuples with subject id pairs.
+    """
+    pairs = metadata_df.groupby('family_id')['participant_id'].apply(
+        lambda x: list(itcomb(x, 2)))
+    # Flatten the list of pairs
+    pos_pairs = [pair for pairs_list in pairs.tolist()
+                 for pair in pairs_list]
+    return pos_pairs
+
+
+def get_negative_pairs(metadata_df: pd.DataFrame):
+    """
+    Get list of negative (no twins) pairs.
+
+    Args:
+        metadata_df: pandas dataframe with col 'participant_id' and 'family_id'
+
+    Returns:
+        list of tuples with subject id pairs.
+    """
+    neg_pairs = []
+    for pat_id, fam_id in zip(metadata_df["participant_id"], metadata_df["family_id"]):  # noqa: E501
+
+        filtered_df = metadata_df[metadata_df["family_id"] != fam_id]
+        # random pick
+        random_pick = filtered_df.sample(1)
+        pick_pat_id = random_pick["participant_id"].iloc[0]
+        pair = (pat_id, pick_pat_id)
+        neg_pairs.append(pair)
+    return neg_pairs
+
+
 if __name__ == "__main__":
     project_dir = Path(__file__).resolve().parents[2]
     connmats = Path(project_dir, "data", "processed")
     metadata = Path(project_dir, "data", "raw", "ds004169", "participants.tsv")
-    connbase = ConnectomeDatabase(root=connmats, meta_file=metadata)
-    sample = connbase[0]
+    metadata = pd.read_csv(metadata, delimiter="\t")
+    neg_pairs = get_negative_pairs(metadata)
+    pos_pairs = get_positive_pairs(metadata)
