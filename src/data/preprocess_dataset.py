@@ -52,7 +52,7 @@ def bids_to_tensor(
     masker_func,
     masker_anat,
     corr_measure,
-):
+) -> None:
     """Read nii files from bids folder and write as torch tensor.
 
     Args:
@@ -142,6 +142,21 @@ def bids_to_tensor(
                                 f"{mri_type}_{subject}_{session}.pt",
                             )
                             torch.save(corr, str(save_file))
+
+
+def preprocess_corrmats(source_dir: str, thrshld: float) -> None:
+    """Preprocess connectivity matrices.
+
+    Args:
+        source_dir: string of directory containing conn matrices in .pt format.
+        thrshld: float of threshold. If correlation below, then set to 0.
+    """
+    conmatrices = os.listdir(source_dir)
+    for connectome in conmatrices:
+        mat = torch.load(os.path.join(source_dir, connectome))
+        mat_masked = torch.where(  # noqa BLK 100
+            torch.abs(mat) > thrshld, torch.tensor(0.0), mat)  # noqa BLK 100
+        torch.save(mat_masked, str(os.path.join(source_dir, connectome)))
 
 
 if __name__ == "__main__":
