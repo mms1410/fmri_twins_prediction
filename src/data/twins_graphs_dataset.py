@@ -126,7 +126,7 @@ class TwinsConnectomeDataset(Dataset):
         graph_twin_data = self.get_graph_of_participant(participants_twin_pt_filename, participants_twin_id)
         label : int = twins_metadata_df[ARE_TWINS]
         label = torch.tensor(label, dtype=torch.int64)
-        print(graph_data, graph_twin_data, label)
+#        print(graph_data, graph_twin_data, label)
 
         return (graph_data, graph_twin_data), label
 
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     print(twins_dataset[1])
     print(twins_dataset[2])
     print(twins_dataset[3])
-    print(twins_dataset[3][0][0].shape)
+#    print(twins_dataset[3][0][0].shape)
     
     
 

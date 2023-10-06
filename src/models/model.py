@@ -1,7 +1,9 @@
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import torch_geometric
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 from torch_geometric.data import Data, Dataset
 from torch_geometric.nn import GCNConv
 
@@ -58,7 +60,38 @@ class TwinGNN(pl.LightningModule):
         labels = labels.view(out.shape).float()
         criterion = torch.nn.BCELoss()
         loss = criterion(out, labels)
-        return loss
+        self.log('train_loss', loss) 
+
+        return {'loss': loss, 'progress_bar': {'train_loss': loss}}
+
+
+
+    def validation_step(self, batch, batch_idx):
+        (data, labels) = batch
+        out = self(data)
+        labels = labels.view(out.shape).float()
+        criterion = torch.nn.BCELoss()
+        val_loss = criterion(out, labels)
+        self.log('eval_loss', val_loss, batch_size=len(batch))
+
+        # Convert the output probabilities to binary values (0 or 1)
+        out_binary = (out > 0.5).float()
+
+        # Calculate accuracy, precision and recall
+        accuracy = accuracy_score(labels.cpu(), out_binary.cpu())
+        precision = precision_score(labels.cpu(), out_binary.cpu(), zero_division=np.nan)
+        recall = recall_score(labels.cpu(), out_binary.cpu(), zero_division = np.nan)
+
+        # Log the metrics
+        # self.log('accuracy', accuracy, prog_bar=True)
+        # self.log('precision', precision, prog_bar=True)
+        # self.log('recall', recall, prog_bar=True)
+
+        self.log('accuracy', accuracy, batch_size=len(batch))
+        self.log('precision', precision, batch_size=len(batch))
+        self.log('recall', recall, batch_size=len(batch))
+
+        
 
 
     def configure_optimizers(self):
