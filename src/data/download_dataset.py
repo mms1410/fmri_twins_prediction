@@ -14,6 +14,9 @@ import shutil
 import datalad.api as dl
 
 
+def setup_logging(level=logging.INFO):
+    logging.basicConfig(level=level)
+
 def download_dataset(
     dataset_access_number: str = "ds004169",
     destination_dir: str | None = None,
@@ -24,9 +27,7 @@ def download_dataset(
         dataset_access_number: neuro number (str, optional)
         destination_dir : path where the folders are stored (str | None, optional)
     """
-    url_part1 = "https://github.com/OpenNeuroDatasets/"
-    url_part2 = f"{dataset_access_number}.git"
-    dataset_url = url_part1 + url_part2
+    dataset_url = f"https://github.com/OpenNeuroDatasets/{dataset_access_number}.git"
 
     dataset = dl.clone(source=dataset_url)
     dl.get(dataset.path)
@@ -44,4 +45,5 @@ def download_dataset(
 
 
 if __name__ == "__main__":
+    setup_logging()
     download_dataset()
