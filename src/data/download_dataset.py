@@ -14,8 +14,9 @@ import shutil
 import datalad.api as dl
 
 
-def setup_logging(level=logging.INFO):
+def _setup_logging(level=logging.INFO):
     logging.basicConfig(level=level)
+
 
 def download_dataset(
     dataset_access_number: str = "ds004169",
@@ -45,5 +46,5 @@ def download_dataset(
 
 
 if __name__ == "__main__":
-    setup_logging()
+    _setup_logging()
     download_dataset()
