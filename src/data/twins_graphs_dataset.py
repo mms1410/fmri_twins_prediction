@@ -18,7 +18,7 @@ ARE_TWINS = "are_twins"
 
 
 def create_participants_pairs_df(
-    df_metadata: pd.Dataframe, factor_non_twins: int, root: Union[str, Path]
+    df_metadata: pd.DataFrame, factor_non_twins: int, root: Union[str, Path]
 ):
     """Create pairs of participants. All pairs of twins are sampled.
 
