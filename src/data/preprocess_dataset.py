@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 from typing import Tuple, Union
 
-import click
 import torch
 from nilearn.connectome import ConnectivityMeasure
 from nilearn.datasets import fetch_atlas_aal, fetch_atlas_schaefer_2018
@@ -83,7 +82,7 @@ def bids_to_tensor(
 
     subjects = [s for s in subjects if s.startswith("sub-")]
     for subject in subjects:
-        subject_dir = os.path.join(bids_folder, subject)
+        subject_dir = os.path.join(bids_dir, subject)
         for session in os.listdir(subject_dir):
             session_dir = os.path.join(subject_dir, session)
             for mri_type in os.listdir(session_dir):
@@ -209,58 +208,3 @@ if __name__ == "__main__":
 
     # mask conn matrices
     thrshld = config.get("mriprep").get("preprocessing").get("threshold")
-    preprocess_connmats(
-        source_dir=Path(data_dir, "interim"),
-        destination_dir=Path(data_dir, "preprocessed"),
-        thrshld=thrshld
-=======
-            torch.abs(mat) > thrshld, torch.tensor(0.0), mat
-        )  # noqa BLK 100
-        torch.save(mat_masked, str(os.path.join(source_dir, connectome)))
-
-
-@click.command()
-@click.option(
-    "--bids-dir",
-    default=None,
-    help="Directory path to the data. If not provided, the default path will be used.",
-)
-def main(bids_dir_str: str):
-    """Execute the proprocessing from raw data to pt graphs.
-
-    Args:
-        bids_dir_str (str): directory with the raw data
-    """
-    _setup_logging()
-    logger = logging.getLogger(__name__)
-    logger.info("starting preprocessing dataset")
-    project_dir = Path(__file__).resolve().parents[2]
-    data_dir = Path(project_dir, "data")
-    logger.info(f"reading data from {data_dir}")
-    mri_id = "ds004169"
-    bids_dir = Path(bids_dir_str) if bids_dir_str else os.path.join(data_dir, "raw", mri_id)
-    logger.info(f"reading raw data from {bids_dir}")
-
-    destination_dir = os.path.join(data_dir, "processed")
-    external_dir = os.path.join(data_dir, "external")
-
-    # Create Correlation Measure
-    corr_measure = ConnectivityMeasure(kind="correlation")
-    # Create atlases
-    atlas_func_filename, atlas_anat_filename = fetch_func_anat_atlases(
-        external_dir,
-    )
-    # Create a masker using the atlas
-    masker_func = NiftiLabelsMasker(labels_img=atlas_func_filename)
-    masker_anat = NiftiLabelsMasker(labels_img=atlas_anat_filename)
-    bids_to_tensor(
-        bids_dir=bids_dir,
-        destination_folder=destination_dir,
-        masker_func=masker_func,
-        masker_anat=masker_anat,
-        corr_measure=corr_measure,
-    )
-
-
-if __name__ == "__main__":
-    main()
