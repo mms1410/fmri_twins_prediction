@@ -1,14 +1,19 @@
 """Preprocessing functions for MRI images."""
-# TODO: logging
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
+import click
 import torch
 from nilearn.connectome import ConnectivityMeasure
 from nilearn.datasets import fetch_atlas_aal, fetch_atlas_schaefer_2018
 from nilearn.maskers import NiftiLabelsMasker
+
+
+def _setup_logging(level=logging.INFO):
+    logging.basicConfig(level=level)
 
 
 def fetch_func_anat_atlases(data_dir: str):
@@ -47,7 +52,7 @@ def nilearn_warning(subject: str, warning, mritype: str, funcname: str):
 
 
 def bids_to_tensor(
-    bids_folder: str,
+    bids_dir,
     destination_folder: str,
     masker_func,
     masker_anat,
@@ -56,15 +61,19 @@ def bids_to_tensor(
     """Read nii files from bids folder and write as torch tensor.
 
     Args:
-        bids_folder: String of to BIDS folder location.
+        bids_dir: Path to BIDS folder location.
         destination_folder: String of directory to write into.
         masker_func: Masker object for functional connectivity.
         masker_anat: Masker object for anatomical connectivity.
         corr_measure: ConnectivityMeasuer object to calculate correlation.
     """
-    subjects = os.listdir(bids_folder)
+    subjects = os.listdir(bids_dir)
+    logger = logging.getLogger(__name__)
+    logger.info(f"reading subjects data from {bids_dir}")
+
     subjects = [s for s in subjects if s.startswith("sub-")]
     for subject in subjects:
+        logger.info(f"reading subjects data from subject {subject}")
         subject_dir = os.path.join(bids_dir, subject)
         for session in os.listdir(subject_dir):
             session_dir = os.path.join(subject_dir, session)
@@ -141,6 +150,9 @@ def bids_to_tensor(
                                 destination_folder,
                                 f"{mri_type}_{subject}_{session}.pt",
                             )
+                            if not os.path.exists(destination_folder):
+                                os.makedirs(destination_folder)
+
                             torch.save(corr, str(save_file))
 
 
@@ -155,16 +167,33 @@ def preprocess_corrmats(source_dir: str, thrshld: float) -> None:
     for connectome in conmatrices:
         mat = torch.load(os.path.join(source_dir, connectome))
         mat_masked = torch.where(  # noqa BLK 100
-            torch.abs(mat) > thrshld, torch.tensor(0.0), mat)  # noqa BLK 100
+            torch.abs(mat) > thrshld, torch.tensor(0.0), mat
+        )  # noqa BLK 100
         torch.save(mat_masked, str(os.path.join(source_dir, connectome)))
 
 
-if __name__ == "__main__":
-    # Set variables
+@click.command()
+@click.option(
+    "--bids-dir",
+    default=None,
+    help="Directory path to the data. If not provided, the default path will be used.",
+)
+def main(bids_dir_str: str):
+    """Execute the proprocessing from raw data to pt graphs.
+
+    Args:
+        bids_dir_str (str): directory with the raw data
+    """
+    _setup_logging()
+    logger = logging.getLogger(__name__)
+    logger.info("starting preprocessing dataset")
     project_dir = Path(__file__).resolve().parents[2]
     data_dir = Path(project_dir, "data")
+    logger.info(f"reading data from {data_dir}")
     mri_id = "ds004169"
-    bids_dir = os.path.join(data_dir, "raw", mri_id)
+    bids_dir = Path(bids_dir_str) if bids_dir_str else os.path.join(data_dir, "raw", mri_id)
+    logger.info(f"reading raw data from {bids_dir}")
+
     destination_dir = os.path.join(data_dir, "processed")
     external_dir = os.path.join(data_dir, "external")
 
@@ -178,9 +207,13 @@ if __name__ == "__main__":
     masker_func = NiftiLabelsMasker(labels_img=atlas_func_filename)
     masker_anat = NiftiLabelsMasker(labels_img=atlas_anat_filename)
     bids_to_tensor(
-        bids_folder=bids_dir,
+        bids_dir=bids_dir,
         destination_folder=destination_dir,
         masker_func=masker_func,
         masker_anat=masker_anat,
         corr_measure=corr_measure,
     )
+
+
+if __name__ == "__main__":
+    main()
