@@ -23,7 +23,7 @@ def download_dataset(
 
     Args:
         dataset_access_number: neuro number (str, optional)
-        destination_dir : path where the folders are stored (str | None, optional)
+        destination_dir : path where the folders are stored
     """
     url_part1 = "https://github.com/OpenNeuroDatasets/"
     url_part2 = f"{dataset_access_number}.git"
