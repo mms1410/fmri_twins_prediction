@@ -10,13 +10,14 @@ sudo apt-get install datalad
 import logging
 import os
 import shutil
+from typing import Union
 
 import datalad.api as dl
 
 
 def download_dataset(
     dataset_access_number: str = "ds004169",
-    destination_dir: str | None = None,
+    destination_dir: Union[str, None] = None,
 ):
     """Download dataset from open neuro datasets.
 
@@ -40,7 +41,8 @@ def download_dataset(
     # Move the folder to the destination:
     shutil.move(dataset_access_number, destination_dir)
     logger = logging.getLogger(__name__)
-    logger.info(f"raw fmri data {dataset_access_number} downloaded and saved to {destination_dir}")
+    logger.info(
+        f"raw fmri data {dataset_access_number} downloaded and saved to {destination_dir}")  # noqa BLK 100
 
 
 if __name__ == "__main__":

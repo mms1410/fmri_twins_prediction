@@ -1,17 +1,18 @@
 """Preprocessing functions for MRI images."""
-# TODO: logging
 from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Tuple, Union
 
 import torch
 from nilearn.connectome import ConnectivityMeasure
 from nilearn.datasets import fetch_atlas_aal, fetch_atlas_schaefer_2018
 from nilearn.maskers import NiftiLabelsMasker
+from omegaconf import OmegaConf
 
 
-def fetch_func_anat_atlases(data_dir: str):
+def fetch_atlases(data_dir: Union[Path, str]) -> Tuple[NiftiLabelsMasker, NiftiLabelsMasker]:  # noqa: E501 BLK100
     """Fetch functional and anatomical atlases with nilean.
 
     Args:
@@ -32,6 +33,18 @@ def fetch_func_anat_atlases(data_dir: str):
         raise Exception("Error occured when loaden atlases.")
 
     return atlas_func_filename, atlas_anat_filename
+
+
+def set_conn_measure(kind: str = "covariance") -> ConnectivityMeasure:
+    """Set Connectivity measure.
+
+    Args:
+        kind: string for connectivity measure.
+
+    Returns:
+        ConnectivityMeasure
+    """
+    return ConnectivityMeasure(kind=kind)
 
 
 def nilearn_warning(subject: str, warning, mritype: str, funcname: str):
@@ -65,7 +78,7 @@ def bids_to_tensor(
     subjects = os.listdir(bids_folder)
     subjects = [s for s in subjects if s.startswith("sub-")]
     for subject in subjects:
-        subject_dir = os.path.join(bids_dir, subject)
+        subject_dir = os.path.join(bids_folder, subject)
         for session in os.listdir(subject_dir):
             session_dir = os.path.join(subject_dir, session)
             for mri_type in os.listdir(session_dir):
@@ -144,11 +157,17 @@ def bids_to_tensor(
                             torch.save(corr, str(save_file))
 
 
-def preprocess_corrmats(source_dir: str, thrshld: float) -> None:
+def preprocess_connmats(source_dir: Union[str, Path],
+                        destination_dir: Union[str, Path] = "",
+                        thrshld: float = 0.3) -> None:
     """Preprocess connectivity matrices.
+
+    Connectiviy measures that are in absolute value below threshold
+    will be set to zero.
 
     Args:
         source_dir: string of directory containing conn matrices in .pt format.
+        destination_dir: string of directory to save processed data.
         thrshld: float of threshold. If correlation below, then set to 0.
     """
     conmatrices = os.listdir(source_dir)
@@ -156,31 +175,34 @@ def preprocess_corrmats(source_dir: str, thrshld: float) -> None:
         mat = torch.load(os.path.join(source_dir, connectome))
         mat_masked = torch.where(  # noqa BLK 100
             torch.abs(mat) > thrshld, torch.tensor(0.0), mat)  # noqa BLK 100
-        torch.save(mat_masked, str(os.path.join(source_dir, connectome)))
+        if destination_dir == "":
+            torch.save(mat_masked, Path(destination_dir, connectome))
+        else:
+            torch.save(mat_masked, Path(source_dir, connectome))
 
 
 if __name__ == "__main__":
-    # Set variables
+    config = OmegaConf.load("configs/data_preprocess.yaml")
     project_dir = Path(__file__).resolve().parents[2]
     data_dir = Path(project_dir, "data")
-    mri_id = "ds004169"
-    bids_dir = os.path.join(data_dir, "raw", mri_id)
-    destination_dir = os.path.join(data_dir, "processed")
-    external_dir = os.path.join(data_dir, "external")
 
-    # Create Correlation Measure
-    corr_measure = ConnectivityMeasure(kind="correlation")
-    # Create atlases
-    atlas_func_filename, atlas_anat_filename = fetch_func_anat_atlases(
-        external_dir,
-    )
-    # Create a masker using the atlas
-    masker_func = NiftiLabelsMasker(labels_img=atlas_func_filename)
-    masker_anat = NiftiLabelsMasker(labels_img=atlas_anat_filename)
-    bids_to_tensor(
-        bids_folder=bids_dir,
-        destination_folder=destination_dir,
-        masker_func=masker_func,
-        masker_anat=masker_anat,
-        corr_measure=corr_measure,
+    masker_func, masker_anat = fetch_atlases(
+        Path(data_dir, "external"))  # writes atlas into external
+    connectivity_measure = config.get("mriprep").get(
+        "parcellation").get("connectivity_measure")
+    conn = set_conn_measure(kind=connectivity_measure)
+    # create pt files of mri images
+    # bids_to_tensor(
+    #    bids_folder=Path(data_dir, "raw", "ds004169"),
+    #    destination_folder=Path(data_dir, "interim"),
+    #    masker_func=masker_func,
+    #    masker_anat=masker_anat
+    # )
+
+    # mask conn matrices
+    thrshld = config.get("mriprep").get("preprocessing").get("threshold")
+    preprocess_connmats(
+        source_dir=Path(data_dir, "interim"),
+        destination_dir=Path(data_dir, "preprocessed"),
+        thrshld=thrshld
     )
