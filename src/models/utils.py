@@ -4,6 +4,7 @@ from typing import Optional, Union
 
 import pandas as pd
 import torch
+import torch_geometric
 from matplotlib import pyplot as plt
 from omegaconf import OmegaConf
 
@@ -90,3 +91,5 @@ if __name__ == "__main__":
         project_dir, "logs"), project_name="twins_connectome_project")
     write_loss_plot(Path(folder, "metrics.csv"), Path(
         project_dir, "assets", "validation_loss.jpg"))
+    model = get_model(folder)
+    compiled_model = torch_geometric.compile(model)
