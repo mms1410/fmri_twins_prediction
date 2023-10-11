@@ -15,6 +15,9 @@ from src.util import get_logger
 
 project_dir = Path(__file__).resolve().parents[2]
 config = OmegaConf.load("configs/data_training.yaml")
+conf_hidden_channels = config.hidden_channels
+conf_epochs = config.epochs
+conf_batch_size = config.batch_size
 
 
 class LitProgressBar(ProgressBar):
@@ -92,10 +95,11 @@ logger.info(f"val_size: {val_size}")
 train_dataset, val_dataset = random_split(
     twins_dataset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=2, shuffle=False)
+train_loader = DataLoader(
+    train_dataset, batch_size=conf_batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=conf_batch_size, shuffle=False)
 
-model = TwinGNN(in_channels=1, hidden_channels=64)
+model = TwinGNN(in_channels=1, hidden_channels=conf_hidden_channels)
 model.float()
 
 
@@ -117,7 +121,7 @@ checkpoint_callback = ModelCheckpoint(
 default_progress_bar = pl.callbacks.ProgressBar()
 
 trainer = pl.Trainer(
-    max_epochs=1,
+    max_epochs=conf_epochs,
     accelerator="auto",
     devices="auto",
     callbacks=[LitProgressBar(), checkpoint_callback],

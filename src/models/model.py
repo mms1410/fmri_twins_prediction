@@ -3,9 +3,13 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as nn_func
+from hydra.utils import instantiate
+from omegaconf import OmegaConf
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv
+
+config = OmegaConf.load("configs/data_training.yaml")
 
 
 class TwinGNN(pl.LightningModule):
@@ -103,7 +107,7 @@ class TwinGNN(pl.LightningModule):
         labels = labels.view(out.shape).float()
         criterion = torch.nn.BCELoss()
         val_loss = criterion(out, labels)
-        self.log("eval_loss", val_loss, batch_size=len(batch))
+        self.log("val_loss", val_loss, batch_size=len(batch))
 
         # Convert the output probabilities to binary values (0 or 1)
         out_binary = (out > 0.5).float()
@@ -126,4 +130,6 @@ class TwinGNN(pl.LightningModule):
         Returns:
             _type_: optimizer
         """
-        return torch.optim.Adam(self.parameters(), lr=0.01)
+        partial_optimizer = instantiate(config.optimizer)
+        optimizer = partial_optimizer(self.parameters())
+        return optimizer
