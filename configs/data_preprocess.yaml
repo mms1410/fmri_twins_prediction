@@ -1,0 +1,5 @@
+mriprep:
+  parcellation:
+    connectivity_measure: "correlation"
+  preprocessing:
+    threshold: 0.3

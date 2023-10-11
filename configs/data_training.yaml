@@ -1,0 +1,11 @@
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 0.01
+  _partial_: true
+
+loss_function:
+  _target_: "torch.nn.modules.loss.BCELoss"
+
+epochs: 5
+batch_size: 128
+hidden_channels: 64

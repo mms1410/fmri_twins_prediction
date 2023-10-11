@@ -1,7 +1,10 @@
 """Module to train the twin classification nn."""
-import mlflow
+from pathlib import Path
+
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ProgressBar
+from omegaconf import OmegaConf
+from pytorch_lightning.callbacks import ModelCheckpoint, ProgressBar
+from pytorch_lightning.loggers import CSVLogger
 from torch.utils.data import random_split
 from torch_geometric.loader import DataLoader
 from tqdm import tqdm
@@ -9,6 +12,12 @@ from tqdm import tqdm
 from src.data.twins_graphs_dataset import TwinsConnectomeDataset
 from src.models.model import TwinGNN
 from src.util import get_logger
+
+project_dir = Path(__file__).resolve().parents[2]
+config = OmegaConf.load("configs/data_training.yaml")
+conf_hidden_channels = config.hidden_channels
+conf_epochs = config.epochs
+conf_batch_size = config.batch_size
 
 
 class LitProgressBar(ProgressBar):
@@ -54,7 +63,8 @@ class LitProgressBar(ProgressBar):
         # Print the output of the model for this batch
         logger.info(f"Model output: {outputs}")
 
-        # If you have logged metrics in your `training_step`, you can access them like this:
+        # If you have logged metrics in your `training_step`
+        # you can access them like this:
         train_loss = pl_module.trainer.callback_metrics.get("train_loss")
         logger.info(f"train_loss:{train_loss}")
         eval_loss = pl_module.trainer.callback_metrics.get("eval_loss")
@@ -62,7 +72,9 @@ class LitProgressBar(ProgressBar):
         logger.info(f"eval_loss:{eval_loss}")
 
         if train_loss:
-            self.main_progress_bar.set_postfix(train_loss=train_loss.item(), refresh=False)
+            self.main_progress_bar.set_postfix(  # noqa NLK 100
+                train_loss=train_loss.item(), refresh=False
+            )  # noqa NLK 100
 
         accuracy = pl_module.trainer.callback_metrics.get("accuracy")
         precision = pl_module.trainer.callback_metrics.get("precision")
@@ -72,9 +84,6 @@ class LitProgressBar(ProgressBar):
         logger.info(f"precision:{precision}")
         logger.info(f"recall:{recall}")
 
-
-# 1. Start MLflow tracking
-mlflow.start_run()
 
 twins_dataset = TwinsConnectomeDataset()
 
@@ -86,40 +95,35 @@ logger.info(f"val_size: {val_size}")
 
 train_dataset, val_dataset = random_split(twins_dataset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=2, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=conf_batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=conf_batch_size, shuffle=False)
 
-model = TwinGNN(in_channels=1, hidden_channels=64)
+model = TwinGNN(in_channels=1, hidden_channels=conf_hidden_channels)
 model.float()
 
 
-class MLFlowLoggingCallback(pl.Callback):
-    """Class for mlflow callbacks."""
+# set csv logger to track training metrics
+logger_csv = CSVLogger("logs", name="twins_connectome_project")
+logger_csv.log_hyperparams(params=config)
 
-    def on_epoch_end(self, trainer, pl_module):
-        """Call back method on epoch end.
+# set callback to save top k models
+checkpoint_callback = ModelCheckpoint(
+    dirpath=Path(project_dir, "models", "checkpoints"),
+    save_top_k=1,
+    verbose=True,
+    monitor="val_loss",
+    mode="min",
+)
 
-        Args:
-            trainer : trainer
-            pl_module : pl_module
-        """
-        logs = trainer.callback_metrics
-        for key, value in logs.items():
-            if key in ["train_loss_epoch", "val_loss_epoch"]:
-                mlflow.log_metric(key, value)
+default_progress_bar = pl.callbacks.ProgressBar()
 
+trainer = pl.Trainer(
+    max_epochs=conf_epochs,
+    accelerator="auto",
+    devices="auto",
+    callbacks=[LitProgressBar(), checkpoint_callback],
+    val_check_interval=0.0000001,
+    # val_check_interval=1
+)
 
-if __name__ == "__main__":
-    default_progress_bar = pl.callbacks.ProgressBar()
-
-    trainer = pl.Trainer(
-        max_epochs=1,
-        accelerator="auto",
-        devices="auto",
-        callbacks=[MLFlowLoggingCallback(), LitProgressBar()],
-        val_check_interval=0.0000001,
-        # val_check_interval=1
-    )
-
-    trainer.fit(model, train_loader, val_loader)
-    mlflow.end_run()
+trainer.fit(model, train_loader, val_loader)
