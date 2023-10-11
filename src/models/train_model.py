@@ -109,16 +109,17 @@ class MLFlowLoggingCallback(pl.Callback):
                 mlflow.log_metric(key, value)
 
 
-default_progress_bar = pl.callbacks.ProgressBar()
+if __name__ == "__main__":
+    default_progress_bar = pl.callbacks.ProgressBar()
 
-trainer = pl.Trainer(
-    max_epochs=1,
-    accelerator="auto",
-    devices="auto",
-    callbacks=[MLFlowLoggingCallback(), LitProgressBar()],
-    val_check_interval=0.0000001,
-    # val_check_interval=1
-)
+    trainer = pl.Trainer(
+        max_epochs=1,
+        accelerator="auto",
+        devices="auto",
+        callbacks=[MLFlowLoggingCallback(), LitProgressBar()],
+        val_check_interval=0.0000001,
+        # val_check_interval=1
+    )
 
-trainer.fit(model, train_loader, val_loader)
-mlflow.end_run()
+    trainer.fit(model, train_loader, val_loader)
+    mlflow.end_run()
