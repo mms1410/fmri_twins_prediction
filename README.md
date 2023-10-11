@@ -309,7 +309,7 @@ end of the project.
 >
 > Answer:
 
---- question 10 fill here ---
+--- We did not use DVC for managing data in our project. The problem was that we did not have access to a large remote storage space. However, a dvc versioning might have been beneficial for us as we had a long preprocessing pipeline with large storge requirements. Thus, to keep track of changes to the data, data versioning systems like dvc might have been beneficial. We could then load the data to a data storage space and link to this data from a metafile stored in the code repository.  ---
 
 ### Question 11
 
@@ -325,7 +325,7 @@ end of the project.
 >
 > Answer:
 
---- question 11 fill here ---
+--- Our continuos integration workflow comprised github workflow files and actions. Every time a contributor pushes to a branch, tests are executed (see question 6) via the tox test automation tool. These comprise unit tests, tests for proper formatting and documentation. Also, to merge the contributorś changes with the main branch, a pull request has to be opened and approved by the other team member. The tests test multiple versions of python but only one operating system version (ubuntu latest).  ---
 
 ## Running code and tracking experiments
 
@@ -360,7 +360,7 @@ Hydra reads in our configuration as a dictionary where the actual configurations
 >
 > Answer:
 
---- question 13 fill here ---
+--- We did not use any kind of nondeterministic code, so that our experiments are reproducible. Each preprocessing step (downloading, creating the connectivity matrix, etc. is reproducible). Also the data loading is reproducible, as the twin pairs are processed from the participants.tsv file in a reproducible manner. Thus, replicating our processes should lead to identical results (given the same popultion data).  ---
 
 ### Question 14
 
@@ -377,7 +377,7 @@ Hydra reads in our configuration as a dictionary where the actual configurations
 >
 > Answer:
 
---- See / ---
+--- See 'assets/validation_loss.jpg': (![Validation Loss](assets/validation_loss.jpg)) . This file was created via a function in src/models/utils and used the logged metrics mentioned in Q13. Typically the optimal model is chosen not from test error but from validation error. The optimal model therefore corresponds to the model with minimal validation loss. Further for accessing model quality we would typically expect for the validation error to go down and potentially later increase again, a situation refrred to as overfitting. ---
 
 ### Question 15
 
@@ -410,7 +410,7 @@ We created a Dockerfile for our project and named it 'trainer.dockerfile'. From 
 >
 > Answer:
 
---- question 16 fill here ---
+--- Since we used VS Code we could use the debugger implemented in VScode. The typical precedure would be to set a so called 'breakpoint' (or multiple) to start the debugger. The debugger would excecute all code up until the first breakpoint is encounterd and enters debugger mode. In debugger mode we can check the actual values of relevant variables, submit commands that are excecuted in the debugger environment and walk through our code step by step in order to track the behavior of our code. Pytorchlighting provided a convenient way to profile our code. The output gets written to stdout after model training. So far, we have not analyzed the profiling output in detail. Regarding debugging, we also followed the advise from the course, e.g. we started with a simple model and created visualizations to track the training process. ---
 
 ## Working in the cloud
 
@@ -442,7 +442,7 @@ We created a Dockerfile for our project and named it 'trainer.dockerfile'. From 
 >
 > Answer:
 
---- question 18 fill here ---
+--- We did not have access to GCP (or AWS or Azure) so that the following questions do not apply to our project  ---
 
 ### Question 19
 
@@ -500,7 +500,7 @@ We created a Dockerfile for our project and named it 'trainer.dockerfile'. From 
 >
 > Answer:
 
---- question 23 fill here ---
+--- Yes, we implemented monitoring for our deployed model using the Evidently framework. This helped us monitor potential data drifts. We manipulated a parameter during training, named factor_of_non_twins, to produce datasets with varied data distributions. Evidently then analyzed if the target distributions remained consistent or changed. Additionally, Evidently generates an HTML report to provide a detailed overview of the monitoring results. Monitoring ensures the model's performance remains consistent over time and alerts us to any necessary updates or recalibrations. ---
 
 ### Question 24
 
@@ -514,7 +514,7 @@ We created a Dockerfile for our project and named it 'trainer.dockerfile'. From 
 >
 > Answer:
 
---- question 24 fill here ---
+--- none ---
 
 ## Overall discussion of project
 
@@ -549,7 +549,7 @@ We created a Dockerfile for our project and named it 'trainer.dockerfile'. From 
 >
 > Answer:
 
---- question 26 fill here ---
+--- The biggest challenge in our project was that we used mri data which arguebly are  not the typical case in ML projects. Therefore, we first had to handle mri files and transform those into matrices. Another challenge was that we had to implement our own models from scratch since for graph classification in this context no models are available e.g. on huggingface_hub either for use or for inspiration. Related to this was the other challenge that we had to process connectivity matrices for each patients that we needed to combine into a block matrix for (potentially) each pair of subjects and therefore had yet another 'matrix-pair' with corresponding label twin or no twin. We spent a lot of time in preprocessing since mri files are rather big. Additionaly we needed a proper parcellation of brain into connected areas where we wanted to use nilearn funcitonalities which requires more domain knowledge than we expected (parcellations are typically done via using parcellation atlases but these need to fit to the mri images). Also, creating docker images and containers was difficult as we suffered from lack of storage space and did not have a cloud computing environment. Furthermore, it took a long time to build the images which led to long development cycles.  ---
 
 ### Question 27
 
