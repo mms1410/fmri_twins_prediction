@@ -112,7 +112,8 @@ class LitProgressBar(ProgressBar):
 
         if train_loss:
             self.main_progress_bar.set_postfix(  # noqa NLK 100
-                train_loss=train_loss.item(), refresh=False)  # noqa NLK 100
+                train_loss=train_loss.item(), refresh=False
+            )  # noqa NLK 100
 
         accuracy = pl_module.trainer.callback_metrics.get("accuracy")
         precision = pl_module.trainer.callback_metrics.get("precision")
@@ -131,11 +132,9 @@ val_size = len(twins_dataset) - train_size
 logger = get_logger()
 logger.info(f"val_size: {val_size}")
 
-train_dataset, val_dataset = random_split(
-    twins_dataset, [train_size, val_size])
+train_dataset, val_dataset = random_split(twins_dataset, [train_size, val_size])
 
-train_loader = DataLoader(
-    train_dataset, batch_size=conf_batch_size, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=conf_batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=conf_batch_size, shuffle=False)
 
 model = TwinGNN(in_channels=1, hidden_channels=conf_hidden_channels)
@@ -143,8 +142,7 @@ model.float()
 
 
 # set csv logger to track training metrics
-logger_csv = CSVLogger("logs",
-                       name="twins_connectome_project")
+logger_csv = CSVLogger("logs", name="twins_connectome_project")
 logger_csv.log_hyperparams(params=config)
 
 # set callback to save top k models
@@ -153,6 +151,7 @@ checkpoint_callback = SavePickleCheckpointCallback(
     save_path=Path(project_dir, "models",
                    "checkpoints"),
     prefix="TwinGNN")
+
 
 default_progress_bar = pl.callbacks.ProgressBar()
 
