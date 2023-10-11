@@ -89,3 +89,7 @@ target/
 .mypy_cache/
 lightning_logs/
 mlruns/
+
+models/checkpoints/
+
+logs/
