@@ -1,9 +1,11 @@
 """Module to train the twin classification nn."""
+import pickle  # noqa S403
 from pathlib import Path
+from typing import Union
 
 import pytorch_lightning as pl
 from omegaconf import OmegaConf
-from pytorch_lightning.callbacks import ModelCheckpoint, ProgressBar
+from pytorch_lightning.callbacks import ProgressBar
 from pytorch_lightning.loggers import CSVLogger
 from torch.utils.data import random_split
 from torch_geometric.loader import DataLoader
@@ -18,6 +20,43 @@ config = OmegaConf.load("configs/data_training.yaml")
 conf_hidden_channels = config.hidden_channels
 conf_epochs = config.epochs
 conf_batch_size = config.batch_size
+
+
+class SavePickleCheckpointCallback(pl.Callback):
+    """Creates model Checkpoints.
+
+    This Callback tracks the current model and saves the best one
+    based on validation loss.
+    Returns:
+        pl.Callback
+    """
+
+    def __init__(self, monitor: str = "val_loss", prefix: str = "model", save_path: Union[str, Path] = "./"):  # noqa: E501, BLK100
+        """Inizialize Callback.
+
+        Args:
+            monitor: metric based on which best model is determined.
+            save_path: path for checkpoint(s).
+            prefix: string of prefix.
+        """
+        super().__init__()
+        self.monitor = monitor
+        self.save_path = save_path
+        self.prefix = prefix
+
+    def on_epoch_end(self, trainer, pl_module) -> None:
+        """Log epoch metrics.
+
+        Args:
+            trainer: pytorch lighting trainer class.
+            pl_module: pytorch lighting module (test/validation loop).
+        """
+        checkpoint_name = f"{self.prefix}_epoch_{trainer.current_epoch}_{self.monitor:.2f}.pkl"  # noqa: E501
+        checkpoint_path = Path(self.save_path, checkpoint_name)
+
+        model_state_dict = pl_module.state_dict()
+        with open(checkpoint_path, "wb") as f:
+            pickle.dump(model_state_dict, f)
 
 
 class LitProgressBar(ProgressBar):
@@ -109,14 +148,11 @@ logger_csv = CSVLogger("logs",
 logger_csv.log_hyperparams(params=config)
 
 # set callback to save top k models
-checkpoint_callback = ModelCheckpoint(
-    dirpath=Path(project_dir, "models",
-                 "checkpoints"),
-    save_top_k=1,
-    verbose=True,
+checkpoint_callback = SavePickleCheckpointCallback(
     monitor="val_loss",
-    mode="min"
-)
+    save_path=Path(project_dir, "models",
+                   "checkpoints"),
+    prefix="TwinGNN")
 
 default_progress_bar = pl.callbacks.ProgressBar()
 
@@ -126,6 +162,7 @@ trainer = pl.Trainer(
     devices="auto",
     callbacks=[LitProgressBar(), checkpoint_callback],
     val_check_interval=0.0000001,
+    logger=logger_csv
     # val_check_interval=1
 )
 
