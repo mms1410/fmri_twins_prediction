@@ -108,12 +108,14 @@ class TwinsConnectomeDataset(Dataset):
         self,
         root: Union[str, Path, None] = None,
         meta_file_path: Union[str, Path, None] = None,
+        factor_non_twins=1,
     ):
         """Initialize Connectome Dataset.
 
         Args:
             root: string for path to folder with connectivites in pt format.
             meta_file_path: string for path to tabular with metadata.
+            factor_non_twins: defines how many more non-twins than twins are in the dataset.
         """
         if root is None:
             root = Path("data", "processed")
@@ -121,7 +123,9 @@ class TwinsConnectomeDataset(Dataset):
             meta_file_path = Path("data", "raw", "ds004169", "participants.tsv")
         super().__init__(root)
         self.df_metadata: pd.DataFrame = pd.read_table(meta_file_path)
-        self.df_metadata = create_participants_pairs_df(self.df_metadata, 1, root=root)
+        self.df_metadata = create_participants_pairs_df(
+            self.df_metadata, factor_non_twins=factor_non_twins, root=root
+        )
 
     def len(self):
         """Get length of Dataset.
