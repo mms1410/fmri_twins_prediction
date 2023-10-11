@@ -1,7 +1,6 @@
 """Module to train the twin classification nn."""
 from pathlib import Path
 
-import mlflow
 import pytorch_lightning as pl
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint, ProgressBar
@@ -82,9 +81,6 @@ class LitProgressBar(ProgressBar):
         logger.info(f"recall:{recall}")
 
 
-# 1. Start MLflow tracking
-mlflow.start_run()
-
 twins_dataset = TwinsConnectomeDataset()
 
 # 2. Split your dataset into training and validation sets
@@ -124,10 +120,9 @@ trainer = pl.Trainer(
     max_epochs=1,
     accelerator="auto",
     devices="auto",
-    callbacks=[LitProgressBar()],
+    callbacks=[LitProgressBar(), checkpoint_callback],
     val_check_interval=0.0000001,
     # val_check_interval=1
 )
 
 trainer.fit(model, train_loader, val_loader)
-mlflow.end_run()
