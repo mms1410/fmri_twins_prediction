@@ -566,4 +566,4 @@ We created a Dockerfile for our project and named it 'trainer.dockerfile'. From 
 >
 > Answer:
 
---- question 27 fill here ---
+--- We contributed roughly equally to the project and helped each other to achieve suiteable prototype project. ---
