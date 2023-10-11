@@ -53,8 +53,10 @@ class TwinGNN(pl.LightningModule):
             single_graph_data.x = single_graph_data.x.float()
             single_graph_twin_data.x = single_graph_twin_data.x.float()
 
-            out1 = self._forward_one(single_graph_data.x, single_graph_data.edge_index)
-            out2 = self._forward_one(single_graph_twin_data.x, single_graph_twin_data.edge_index)
+            out1 = self._forward_one(  # noqa NLK 100
+                single_graph_data.x, single_graph_data.edge_index)  # noqa NLK 100
+            out2 = self._forward_one(
+                single_graph_twin_data.x, single_graph_twin_data.edge_index)
 
             # Aggregate node representations
             out1 = out1.mean(dim=0)
@@ -108,8 +110,10 @@ class TwinGNN(pl.LightningModule):
 
         # Calculate accuracy, precision and recall
         accuracy = accuracy_score(labels.cpu(), out_binary.cpu())
-        precision = precision_score(labels.cpu(), out_binary.cpu(), zero_division=np.nan)
-        recall = recall_score(labels.cpu(), out_binary.cpu(), zero_division=np.nan)
+        precision = precision_score(
+            labels.cpu(), out_binary.cpu(), zero_division=np.nan)
+        recall = recall_score(
+            labels.cpu(), out_binary.cpu(), zero_division=np.nan)
 
         # Log the metrics
         self.log("accuracy", accuracy, batch_size=len(batch))
