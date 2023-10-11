@@ -2,7 +2,9 @@
 from pathlib import Path
 from typing import Optional, Union
 
+import pandas as pd
 import torch
+from matplotlib import pyplot as plt
 from omegaconf import OmegaConf
 
 from src.models.model import TwinGNN
@@ -58,11 +60,33 @@ def get_model(experiment_folder: Path, checkpoint_name: Optional[str] = ""):  # 
     # load model
     checkpoint = torch.load(checkpoint)
     model.load_state_dict(checkpoint["state_dict"])  # type: ignore
+    model.eval()
     return model
+
+
+def write_loss_plot(file: Path, destination_file: Path, loss: str = "val_loss") -> None:  # noqa E501
+    """Write plot of validation error.
+
+    Args:
+        file: Path of csv file with necessary data.
+        destination_file: Complete Path of jpg file that will be created.
+        loss: string for value of y-axis. Must be in csv file.
+    """
+    metrics = pd.read_csv(file)
+    idx = metrics.groupby('epoch')['step'].idxmax()
+    metrics = metrics.loc[idx]
+    plt.figure(figsize=(10, 6))
+    plt.plot(metrics['epoch'], metrics['val_loss'], marker='o', linestyle='-')
+    plt.xlabel('Epoch')
+    plt.ylabel('Validation Error')
+    plt.title('Validation Error vs. Epoch')
+    plt.grid(True)
+    plt.savefig(destination_file, format='jpg')
 
 
 if __name__ == "__main__":
     project_dir = Path(__file__).resolve().parents[2]
     folder = get_model_folder(log_dir=Path(
         project_dir, "logs"), project_name="twins_connectome_project")
-    model = get_model(folder)
+    write_loss_plot(Path(folder, "metrics.csv"), Path(
+        project_dir, "assets", "validation_loss.jpg"))
