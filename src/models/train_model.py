@@ -132,9 +132,11 @@ val_size = len(twins_dataset) - train_size
 logger = get_logger()
 logger.info(f"val_size: {val_size}")
 
-train_dataset, val_dataset = random_split(twins_dataset, [train_size, val_size])
+train_dataset, val_dataset = random_split(
+    twins_dataset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=conf_batch_size, shuffle=True)
+train_loader = DataLoader(
+    train_dataset, batch_size=conf_batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=conf_batch_size, shuffle=False)
 
 model = TwinGNN(in_channels=1, hidden_channels=conf_hidden_channels)
@@ -161,8 +163,7 @@ trainer = pl.Trainer(
     devices="auto",
     callbacks=[LitProgressBar(), checkpoint_callback],
     val_check_interval=0.0000001,
-    logger=logger_csv
-    # val_check_interval=1
-)
+    logger=logger_csv,
+    profiler="Simple")
 
 trainer.fit(model, train_loader, val_loader)
