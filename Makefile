@@ -33,8 +33,15 @@ download: requirements
 data: requirements
 	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
 
+preprocess : requirements
+	$(PYTHON_INTERPRETER) src/data/preprocess_dataset.py
+
 train: requirements
 	$(PYTHON_INTERPRETER) src/models/train_model.py
+
+predict: requirements
+	$(PYTHON_INTERPRETER) src/models/predict_model.py
+
 
 torcharchiver:
 	torch-model-archiver --model-name twin_from_brainscans_predictor --version 1.0 --serialized-file default_twin_predictor_model.pt --handler src/deployment/torchhandler.py --export-path model_store -f
