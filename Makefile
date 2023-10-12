@@ -25,9 +25,23 @@ requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 
+## Download dataset
+download: requirements
+	$(PYTHON_INTERPRETER) src/data/download_dataset.py
+
 ## Make Dataset
 data: requirements
 	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+
+train: requirements
+	$(PYTHON_INTERPRETER) src/models/train_model.py
+
+torcharchiver:
+	torch-model-archiver --model-name twin_from_brainscans_predictor --version 1.0 --serialized-file default_twin_predictor_model.pt --handler src/deployment/torchhandler.py --export-path model_store -f
+
+torchserve:
+	torchserve --start --model-store model_store --models twin_from_brainscans_predictor.mar --ts-config config.properties
+
 
 ## Delete all compiled Python files
 clean:

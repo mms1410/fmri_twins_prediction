@@ -219,7 +219,7 @@ end of the project.
 >
 > Answer:
 
---- We tried to separate the overall structure in different tasks/concerns: the data for example should be separated from actual code in a dedicated folder. Similar tests sould be separated from data and other concers in a dedicated test folder. This idea can be applied to each folder itself: for example, the source folder is split into different parts: a folder which contains only scripts containing the modelling part as well as a dedicated folder for e.g. data preprocessing. To start, a new team member would first create a virtual environment. Inside of the environment one would install the reuqired packages (for example via the command line: 'pip install -r requirements.txt').  ---
+--- We tried to separate the overall structure in different tasks/concerns: the data for example should be separated from actual code in a dedicated folder. Similar tests sould be separated from data and other concers in a dedicated test folder. This idea can be applied to each folder itself: for example, the source folder is split into different parts: a folder which contains only scripts containing the modelling part as well as a dedicated folder for e.g. data preprocessing. To start, a new team member would first create a virtual environment. Inside of the environment one would install the reuqired packages (for example via the command line: 'pip install -r requirements.txt'). Then, the necessary data can be downloaded via make download. ---
 
 ### Question 5
 
@@ -360,7 +360,7 @@ Hydra reads in our configuration as a dictionary where the actual configurations
 >
 > Answer:
 
---- We did not use any kind of nondeterministic code, so that our experiments are reproducible. Each preprocessing step (downloading, creating the connectivity matrix, etc. is reproducible). Also the data loading is reproducible, as the twin pairs are processed from the participants.tsv file in a reproducible manner. Thus, replicating our processes should lead to identical results (given the same popultion data).  ---
+--- We did not use any kind of nondeterministic code, so that our experiments are reproducible. Each preprocessing step (downloading, creating the connectivity matrix, etc. is reproducible). Also the data loading is reproducible, as the twin pairs are processed from the participants.tsv file in a reproducible manner. Our data loading for the training process works in such a way that twins are - deterministically - matched with non-twins to generate negative pairs besides the positive pairs given. Thus, replicating our processes should lead to identical results (given the same popultion data).  ---
 
 ### Question 14
 
@@ -485,7 +485,7 @@ We created a Dockerfile for our project and named it 'trainer.dockerfile'. From 
 >
 > Answer:
 
---- question 22 fill here ---
+--- We only managed to draw inference from a saved model checkpoint (see )models/predict_model.py). We attempted to use Torchserve to deploy the model locally, but probably due to difficulties with the complex graph structure in pytorch geometric we could not get the .mar file to respond to (curl) calls  ---
 
 ### Question 23
 
@@ -549,7 +549,7 @@ We created a Dockerfile for our project and named it 'trainer.dockerfile'. From 
 >
 > Answer:
 
---- The biggest challenge in our project was that we used mri data which arguebly are  not the typical case in ML projects. Therefore, we first had to handle mri files and transform those into matrices. Another challenge was that we had to implement our own models from scratch since for graph classification in this context no models are available e.g. on huggingface_hub either for use or for inspiration. Related to this was the other challenge that we had to process connectivity matrices for each patients that we needed to combine into a block matrix for (potentially) each pair of subjects and therefore had yet another 'matrix-pair' with corresponding label twin or no twin. We spent a lot of time in preprocessing since mri files are rather big. Additionaly we needed a proper parcellation of brain into connected areas where we wanted to use nilearn funcitonalities which requires more domain knowledge than we expected (parcellations are typically done via using parcellation atlases but these need to fit to the mri images). Also, creating docker images and containers was difficult as we suffered from lack of storage space and did not have a cloud computing environment. Furthermore, it took a long time to build the images which led to long development cycles.  ---
+--- The biggest challenge in our project was that we used mri data which arguebly are  not the typical case in ML projects. Therefore, we first had to handle mri files and transform those into matrices. Another challenge was that we had to implement our own models from scratch since for graph classification in this context no models are available e.g. on huggingface_hub either for use or for inspiration. Related to this was the other challenge that we had to process connectivity matrices for each patients that we needed to combine into a block matrix for (potentially) each pair of subjects and therefore had yet another 'matrix-pair' with corresponding label twin or no twin. We spent a lot of time in preprocessing since mri files are rather big. Additionaly we needed a proper parcellation of brain into connected areas where we wanted to use nilearn funcitonalities which requires more domain knowledge than we expected (parcellations are typically done via using parcellation atlases but these need to fit to the mri images). After this difficult preprocessing, the data loading and training was also challenging, as our inputs (two graphs of twins) were not in a usual text or image format. Only the binary labels (twin yes no) were standard. Also, creating docker images and containers was difficult as we suffered from lack of storage space and did not have a cloud computing environment. Furthermore, it took a long time to build the images which led to long development cycles.  ---
 
 ### Question 27
 

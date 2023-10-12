@@ -41,13 +41,18 @@ class TwinGNN(pl.LightningModule):
             data (tuple): pair of participant's and twinś garaph dat
 
         Returns:
-            : _description_
+            : probability after sigmoid of being twins
         """
         # Assuming each batch has the shape [batch_size, num_nodes, features]
         graph_data: Data = data[0]
         graph_twin_data: Data = data[1]
 
-        batch_size = graph_data.num_graphs
+        try:
+            batch_size = graph_data.num_graphs
+        except AttributeError:
+            # in inference for example there is no num graphs
+            batch_size = 1
+
         out_list = []
 
         for idx in range(batch_size):
@@ -58,9 +63,9 @@ class TwinGNN(pl.LightningModule):
             single_graph_twin_data.x = single_graph_twin_data.x.float()
 
             out1 = self._forward_one(  # noqa NLK 100
-                single_graph_data.x, single_graph_data.edge_index)  # noqa NLK 100
-            out2 = self._forward_one(
-                single_graph_twin_data.x, single_graph_twin_data.edge_index)
+                single_graph_data.x, single_graph_data.edge_index
+            )  # noqa NLK 100
+            out2 = self._forward_one(single_graph_twin_data.x, single_graph_twin_data.edge_index)
 
             # Aggregate node representations
             out1 = out1.mean(dim=0)
@@ -114,10 +119,8 @@ class TwinGNN(pl.LightningModule):
 
         # Calculate accuracy, precision and recall
         accuracy = accuracy_score(labels.cpu(), out_binary.cpu())
-        precision = precision_score(
-            labels.cpu(), out_binary.cpu(), zero_division=np.nan)
-        recall = recall_score(
-            labels.cpu(), out_binary.cpu(), zero_division=np.nan)
+        precision = precision_score(labels.cpu(), out_binary.cpu(), zero_division=np.nan)
+        recall = recall_score(labels.cpu(), out_binary.cpu(), zero_division=np.nan)
 
         # Log the metrics
         self.log("accuracy", accuracy, batch_size=len(batch))
