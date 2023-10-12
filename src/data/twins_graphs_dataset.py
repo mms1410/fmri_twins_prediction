@@ -139,7 +139,7 @@ class TwinsConnectomeDataset(Dataset):
         """Get Connectome Graph of patient.
 
         Args:
-             pair_idx: interger for indexed element in metadata.
+             pair_idx: integer for indexed element in metadata.
 
         Returns:
             pair of pyGeom Data class.
